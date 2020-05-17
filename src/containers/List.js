@@ -2,7 +2,8 @@ import React, { Fragment } from 'react';
 
 import Card from '../components/Card/Card';
 
-const API = 'http://www.omdbapi.com/?i=tt3896198&apikey=1d03257e';
+console.log(process.env.API);
+const API = process.env.API;
 
 class List extends React.Component {
   constructor() {
@@ -10,36 +11,69 @@ class List extends React.Component {
     this.state = {
       data: [],
       searchTerm: '',
+      error: '',
+      loading: true,
     };
   }
 
   async componentDidMount() {
     // const res = await fetch('../../assets/data.json');
-    const res = await fetch(`${API}&s=batman`);
+    const res = await fetch(`${API}&s=mr-robot`);
     const resJSON = await res.json();
     this.setState({
       data: resJSON.Search,
+      loading: false,
     });
   }
 
-  handleSubmit(e) {
+  async handleSubmit(e) {
     e.preventDefault();
-    console.log('enviando...');
+    if (!this.state.searchTerm) {
+      return this.setState({ error: 'Please write a valid text' });
+    }
+
+    const res = await fetch(`${API}&s=${this.state.searchTerm}`);
+    const data = await res.json();
+
+    if (!data.Search) {
+      return this.setState({
+        error: 'There are no results',
+      });
+    }
+
+    this.setState({
+      data: data.Search,
+      error: '',
+      searchTerm: '',
+    });
   }
 
   render() {
+    const { data, loading } = this.state;
+    if (loading) {
+      return <p className='text-light h2'>Loading❗</p>;
+    }
+
     return (
       <Fragment>
         <div className='row'>
           <div className='col-md-4 offset-md-4 p-4'>
-            <form onSubmit={this.handleSubmit}>
-              <input type='text' className='form-control' placeholder='Search' onChange={(e) => console.log(e.target.value)} autoFocus />
+            <form onSubmit={(e) => this.handleSubmit(e)}>
+              <input
+                type='text'
+                className='form-control'
+                placeholder='Search'
+                onChange={(e) => this.setState({ searchTerm: e.target.value })}
+                value={this.state.searchTerm}
+                autoFocus
+              />
             </form>
+            <p className='text-white'>{this.state.error ? this.state.error : ''}</p>
           </div>
         </div>
         <div className='row'>
-          {this.state.data.map((movie) => {
-            return <Card movie={movie} />;
+          {data.map((movie, i) => {
+            return <Card movie={movie} key={i} />;
           })}
         </div>
       </Fragment>
