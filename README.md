@@ -1,2 +1,4 @@
 # movie-app
-OMDb API en React - Sin create-react-app
+OMDb API React
+
+without create-react-app
